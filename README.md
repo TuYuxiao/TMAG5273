@@ -8,7 +8,7 @@ In current design the INT pin is not used and connected to the ground.
 Features
 * Config many IC modes without directly operating the registers.
 * Read the magnetic data and temperature data in standard I2C read mode (stand-by mode or continuous measure mode).
-* Read the magnetic data and temperature data in standard I2C read mode (continuous measure mode).
+* Read the magnetic data and temperature data in 1-byte I2C read command for 16-bit sensor data mode (continuous measure mode).
 * Config all devices simultaneously by general call write.
 * Change sensor I2C address.
 
