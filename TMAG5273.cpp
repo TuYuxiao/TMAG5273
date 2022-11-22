@@ -1,12 +1,7 @@
 #include "TMAG5273.h"
 
 
-TMAG5273::TMAG5273() {}
-
-void TMAG5273::begin(TwoWire *wire) {
-    i2c_dev = wire;
-    initAll();
-}
+TMAG5273::TMAG5273(TwoWire *wire) {i2c_dev = wire;}
 
 void TMAG5273::configOperatingMode(tmag5273_operating_mode mode)
 {
@@ -86,6 +81,32 @@ void TMAG5273::switchSensor(uint8_t addr)
 {
     currentDeviceAddress = addr;
 }
+
+bool TMAG5273::initSensorArray(uint32_t timeout)
+{
+    timeout = timeout * 1000;
+    unsigned long start_time = micros();
+    while (1)
+    {
+        while(micros() - start_time < timeout) 
+        {
+            i2c_dev->beginTransmission(TMAG5273_DEFAULT_ADDR);
+            uint8_t error = i2c_dev->endTransmission();
+            if (error == 0)
+            {
+                switchSensor(TMAG5273_DEFAULT_ADDR);
+                modifyI2CAddress(TMAG5273_ARRAY_START_ADDR + arrayDevices);
+                arrayDevices++;
+                break;
+            }
+        }
+        if (micros() - start_time < timeout) start_time = micros();
+        else break;
+        if (arrayDevices >  20) break;
+    }
+    Serial.println(arrayDevices);
+}
+
 
 int TMAG5273::scanSensors(void) 
 {

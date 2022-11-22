@@ -51,6 +51,7 @@
 #define REG_MAG_OFFSET_CONFIG_2_DEFAULT 0x00
 
 #define TMAG5273_DEFAULT_ADDR 0x35
+#define TMAG5273_ARRAY_START_ADDR 0x36
 
 #define TSENSET0 25.
 #define TADCRES 60.1
@@ -107,15 +108,14 @@ typedef enum tmag5273_temp_ch_en { // only decides the TMAG5273_READ_MODE_SENSOR
 
 class TMAG5273 {
 public:
-    TMAG5273();
-    void begin(TwoWire *wire);
+    TMAG5273(TwoWire *wire);
     void initAll(void);
 
     void switchSensor(uint8_t addr);
     int scanSensors(void);
     void printDeviceTable(HardwareSerial* serial);
 
-    bool initSensorArray(void);
+    bool initSensorArray(uint32_t timeout=500);
     bool readSensorArray(float* data_ptr = nullptr);
     void transmitSensorData(HardwareSerial* serial);
 
@@ -138,6 +138,7 @@ private:
     TwoWire *i2c_dev = NULL;
     int8_t currentDeviceAddress = TMAG5273_DEFAULT_ADDR;
     float _temp;
+    uint8_t arrayDevices = 0;
 
     tmag5273_mag_tempco_mode magTempcoMode = TMAG5273_NO_MAG_TEMPCO;
     tmag5273_conv_avg_mode convAvgMode = TMAG5273_CONV_AVG_1X;
