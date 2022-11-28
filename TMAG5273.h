@@ -60,6 +60,15 @@
 #define MAG_RANGE_40MT 40.f
 #define MAG_RANGE_80MT 80.f
 
+// conv time upper bound? from datasheet
+#define T_START_MEASURE 70   // set to zero seems ok
+#define T_MEASURE_CHANNEL 25   // might be a little smaller but may cause imcomplete conversion
+#define T_MEASURE_DUMMY 0
+#define CONV_TIME_FROM_AVG_MODE(temp_en, mode) (T_START_MEASURE + (temp_en + 3) * T_MEASURE_CHANNEL * (1 + (1 << (mode >> 2))) + T_MEASURE_DUMMY) 
+
+#define ARRAY_SINGLE_RC_DELAY_MS 1000
+#define ARRAY_POWER_UP_TIMEOUT_MS 500
+
 typedef enum tmag5273_operating_mode {
     TMAG5273_OPERATING_MODE_STANDBY = 0x0,
     TMAG5273_OPERATING_MODE_SLEEP,
@@ -109,15 +118,15 @@ typedef enum tmag5273_temp_ch_en { // only decides the TMAG5273_READ_MODE_SENSOR
 class TMAG5273 {
 public:
     TMAG5273(TwoWire *wire);
+    void init(void);
     void initAll(void);
 
     void switchSensor(uint8_t addr);
-    int scanSensors(void);
     void printDeviceTable(HardwareSerial* serial);
 
-    bool initSensorArray(uint32_t timeout=500);
-    bool readSensorArray(float* data_ptr = nullptr);
-    void transmitSensorData(HardwareSerial* serial);
+    void waitSensorArrayOff(uint32_t rc_delay=ARRAY_SINGLE_RC_DELAY_MS);
+    uint8_t initSensorArray(uint32_t timeout=ARRAY_POWER_UP_TIMEOUT_MS);
+    uint8_t readSensorArray(float* data_ptr);
 
     void modifyI2CAddress(uint8_t new_addr);
 
@@ -142,6 +151,7 @@ private:
 
     tmag5273_mag_tempco_mode magTempcoMode = TMAG5273_NO_MAG_TEMPCO;
     tmag5273_conv_avg_mode convAvgMode = TMAG5273_CONV_AVG_1X;
+    uint16_t estiConversionTime = CONV_TIME_FROM_AVG_MODE(TMAG5273_TEMP_CH_DISABLED, TMAG5273_CONV_AVG_1X);
     tmag5273_read_mode readMode = TMAG5273_READ_MODE_STANDARD;
     
     tmag5273_lp_ln_mode lplnMode = TMAG5273_LOW_ACTIVE_CURRENT;
@@ -157,7 +167,8 @@ private:
 
     bool writeRegister(uint8_t reg, uint8_t data);
     bool writeRegisterGeneral(uint8_t reg, uint8_t data);
-    void _init(void);
+
+    uint8_t _readMagneticField(float* Bx, float* By, float* Bz, float* T);
 };
 
 #endif /* TMAG5273_H */
