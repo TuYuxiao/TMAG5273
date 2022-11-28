@@ -11,9 +11,13 @@ Features
 * Read the magnetic data and temperature data in 1-byte I2C read command for 16-bit sensor data mode (continuous measure mode).
 * Config all devices simultaneously by general call write.
 * Change sensor I2C address.
+* Operating sensor array.
+
+Sensor Array
+* The sensors can share the same I2C bus by initializing the sensors in sequence. In datasheet example, each sensor is controlled by an IO port, which requires too much IOs and is not friendly to the wire connection.
+* The sensors can be powered by in sequence using MOSFET and RC delay circuit using single IO. The sensor address can be configured during this procedure. The design will be open-sourced soon.
 
 TODO
-* Operating sensor array.
 * Support I2C read mode MODE_SENSOR8 1-byte read command for 8-bit data.
 * Support angle read.
 * Support CRC check.
