@@ -9,7 +9,13 @@ TMAG5273 tmag5273(&Wire);
 
 void setup() 
 {
-  Wire.begin(TMAG_SDA , TMAG_SCL, 400000);
+#ifdef ARDUINO_ARCH_ESP32
+  Wire.begin(TMAG_SDA , TMAG_SCL, 1000000);
+#else
+  Wire.begin();
+  Wire.setClock(1000000);
+#endif
+
   Serial.begin(115200);
   while (!Serial); 
 

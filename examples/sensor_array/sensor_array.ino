@@ -14,7 +14,14 @@ uint8_t arrayDevices;
 void setup() 
 {
   pinMode(TMAG_EN, OUTPUT);
-  Wire.begin(TMAG_SDA , TMAG_SCL, 400000); // up to 1MHz
+  
+#ifdef ARDUINO_ARCH_ESP32
+  Wire.begin(TMAG_SDA , TMAG_SCL, 1000000); // up to 1MHz
+#else
+  Wire.begin();
+  Wire.setClock(1000000);
+#endif
+  
   Serial.begin(115200);
   while (!Serial); 
   
