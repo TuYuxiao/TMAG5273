@@ -15,7 +15,7 @@ Features
 
 Sensor Array
 * The sensors can share the same I2C bus by initializing the sensors in sequence. In datasheet example, each sensor is controlled by an IO port, which requires too much IOs and is not friendly to the wire connection.
-* The sensors can be powered by in sequence using MOSFET and RC delay circuit using single IO. The sensor address can be configured during this procedure. The design will be open-sourced soon.
+* The sensors can be powered by in sequence using MOSFET and RC delay circuit using single IO. The sensor address can be configured during this procedure. The design is inside [TMAG5273_unit.zip](https://github.com/TuYuxiao/TMAG5273/blob/master/TMAG5273_unit.zip), which is design in [jialichaung EDA](https://lceda.cn/).
 
 TODO
 * Support I2C read mode MODE_SENSOR8 1-byte read command for 8-bit data.
