@@ -92,10 +92,10 @@ void TMAG5273::waitSensorArrayOff(uint32_t rc_delay)
     while(anyDev) 
     {
         anyDev = false;
-        for(address = 0x35; address < 0xFF; address++)
+        for(address = 0x35; address < 0x65; address++)
         {
-            Wire.beginTransmission(address);
-            error = Wire.endTransmission();
+            i2c_dev->beginTransmission(address);
+            error = i2c_dev->endTransmission();
             if (error == 0) 
             {
                 anyDev = true;
