@@ -82,9 +82,11 @@ typedef enum tmag5273_read_mode {
     TMAG5273_READ_MODE_SENSOR8
 } tmag5273_read_mode_t;
 
-typedef enum tmag5273_mag_range { // TODO support A2
-    TMAG5273_MAG_RANGE_40MT = 0x0,
-    TMAG5273_MAG_RANGE_80MT
+typedef enum tmag5273_mag_range {
+    TMAG5273_MAG_RANGE_40MT = 0x0, // for TMAG5273x1
+    TMAG5273_MAG_RANGE_80MT,       // for TMAG5273x1
+    TMAG5273_MAG_RANGE_133MT,      // for TMAG5273x2
+    TMAG5273_MAG_RANGE_266MT       // for TMAG5273x2
 } tmag5273_mag_range_t;
 
 typedef enum tmag5273_lp_ln_mode { 
