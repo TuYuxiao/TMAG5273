@@ -15,9 +15,24 @@ void TMAG5273::configReadMode(tmag5273_read_mode mode)
 
 void TMAG5273::configMagRange(tmag5273_mag_range range)
 {
-    magRange = range; 
-    if (magRange == TMAG5273_MAG_RANGE_40MT) magRangeValue = 40.f;
-    else magRangeValue = 80.f;
+    switch (range) {
+        case TMAG5273_MAG_RANGE_40MT:
+            magRange = 0x0;
+            magRangeValue = 40.f;
+            break;
+        case TMAG5273_MAG_RANGE_80MT:
+            magRange = 0x3;
+            magRangeValue = 80.f;
+            break;
+        case TMAG5273_MAG_RANGE_133MT:
+            magRange = 0x0;
+            magRangeValue = 133.f;
+            break;
+        case TMAG5273_MAG_RANGE_266MT:
+            magRange = 0x3;
+            magRangeValue = 266.f;
+            break;
+    }
 }
 
 void TMAG5273::configLplnMode(tmag5273_lp_ln_mode mode)
