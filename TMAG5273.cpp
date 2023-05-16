@@ -17,22 +17,15 @@ void TMAG5273::configMagRange(tmag5273_mag_range range)
 {
     switch (range) {
         case TMAG5273_MAG_RANGE_40MT:
-            magRange = 0x0;
-            magRangeValue = 40.f;
+        case TMAG5273_MAG_RANGE_133MT:
+            magRangeMultiple = TMAG5273_MAG_RANGE_MULTIPLE_1x;
             break;
         case TMAG5273_MAG_RANGE_80MT:
-            magRange = 0x3;
-            magRangeValue = 80.f;
-            break;
-        case TMAG5273_MAG_RANGE_133MT:
-            magRange = 0x0;
-            magRangeValue = 133.f;
-            break;
         case TMAG5273_MAG_RANGE_266MT:
-            magRange = 0x3;
-            magRangeValue = 266.f;
+            magRangeMultiple = TMAG5273_MAG_RANGE_MULTIPLE_2x;
             break;
     }
+    magRangeValue = (float) range;
 }
 
 void TMAG5273::configLplnMode(tmag5273_lp_ln_mode mode)
@@ -154,7 +147,8 @@ uint8_t TMAG5273::initSensorArray(uint32_t timeout)
     }
 }
 
-uint8_t TMAG5273::readSensorArray(float* data_ptr) {
+uint8_t TMAG5273::readSensorArray(float* data_ptr) 
+{
     if (operatingMode == TMAG5273_OPERATING_MODE_STANDBY)
     {
         writeRegisterGeneral(DEVICE_ID | 0x80, 0x00); // trigger conversion after the register address decoding is completed, any readonly register is ok
@@ -198,7 +192,7 @@ void TMAG5273::init(void)
     writeRegister(DEVICE_CONFIG_1, (REG_DEVICE_CONFIG_1_DEFAULT & 0x80) | magTempcoMode | convAvgMode | readMode); 
     writeRegister(DEVICE_CONFIG_2, (REG_DEVICE_CONFIG_2_DEFAULT & 0xEC) | lplnMode | operatingMode);
     writeRegister(SENSOR_CONFIG_1, REG_SENSOR_CONFIG_1_DEFAULT); 
-    writeRegister(SENSOR_CONFIG_2, (REG_SENSOR_CONFIG_2_DEFAULT & 0xFC) | magRange); 
+    writeRegister(SENSOR_CONFIG_2, (REG_SENSOR_CONFIG_2_DEFAULT & 0xFC) | magRangeMultiple); 
     writeRegister(X_THR_CONFIG, REG_X_THR_CONFIG_DEFAULT);
     writeRegister(Y_THR_CONFIG, REG_Y_THR_CONFIG_DEFAULT);
     writeRegister(Z_THR_CONFIG, REG_Z_THR_CONFIG_DEFAULT);
@@ -214,7 +208,7 @@ void TMAG5273::initAll(void)
     writeRegisterGeneral(DEVICE_CONFIG_1, (REG_DEVICE_CONFIG_1_DEFAULT & 0x80) | magTempcoMode | convAvgMode | readMode); // TODO support CRC
     writeRegisterGeneral(DEVICE_CONFIG_2, (REG_DEVICE_CONFIG_2_DEFAULT & 0xEC) | lplnMode | operatingMode);
     writeRegisterGeneral(SENSOR_CONFIG_1, REG_SENSOR_CONFIG_1_DEFAULT); // TODO MAG_CH_EN, SLEEPTIME setting
-    writeRegisterGeneral(SENSOR_CONFIG_2, (REG_SENSOR_CONFIG_2_DEFAULT & 0xFC) | magRange); // TODO support ANGLE_EN and read
+    writeRegisterGeneral(SENSOR_CONFIG_2, (REG_SENSOR_CONFIG_2_DEFAULT & 0xFC) | magRangeMultiple); // TODO support ANGLE_EN and read
     writeRegisterGeneral(X_THR_CONFIG, REG_X_THR_CONFIG_DEFAULT);
     writeRegisterGeneral(Y_THR_CONFIG, REG_Y_THR_CONFIG_DEFAULT);
     writeRegisterGeneral(Z_THR_CONFIG, REG_Z_THR_CONFIG_DEFAULT);

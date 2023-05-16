@@ -57,9 +57,6 @@
 #define TADCRES 60.1
 #define TADCT0 17508
 
-#define MAG_RANGE_40MT 40.f
-#define MAG_RANGE_80MT 80.f
-
 // conv time upper bound? from datasheet
 #define T_START_MEASURE 70   // set to zero seems ok
 #define T_MEASURE_CHANNEL 25   // might be a little smaller but may cause imcomplete conversion
@@ -83,11 +80,16 @@ typedef enum tmag5273_read_mode {
 } tmag5273_read_mode_t;
 
 typedef enum tmag5273_mag_range {
-    TMAG5273_MAG_RANGE_40MT = 0x0, // for TMAG5273x1
-    TMAG5273_MAG_RANGE_80MT,       // for TMAG5273x1
-    TMAG5273_MAG_RANGE_133MT,      // for TMAG5273x2
-    TMAG5273_MAG_RANGE_266MT       // for TMAG5273x2
+    TMAG5273_MAG_RANGE_40MT = 40,     // for TMAG5273A1
+    TMAG5273_MAG_RANGE_80MT = 80,     // for TMAG5273A1
+    TMAG5273_MAG_RANGE_133MT = 133,   // for TMAG5273A2
+    TMAG5273_MAG_RANGE_266MT = 266    // for TMAG5273A2
 } tmag5273_mag_range_t;
+
+typedef enum tmag5273_mag_range_multiple {
+    TMAG5273_MAG_RANGE_MULTIPLE_1x = 0x0, 
+    TMAG5273_MAG_RANGE_MULTIPLE_2x = 0x3
+} tmag5273_mag_range_multiple_t;
 
 typedef enum tmag5273_lp_ln_mode { 
     TMAG5273_LOW_ACTIVE_CURRENT = 0x0,
@@ -159,10 +161,10 @@ private:
     tmag5273_lp_ln_mode lplnMode = TMAG5273_LOW_ACTIVE_CURRENT;
     tmag5273_operating_mode operatingMode = TMAG5273_OPERATING_MODE_STANDBY;
     
-    tmag5273_mag_range magRange = TMAG5273_MAG_RANGE_40MT;
+    tmag5273_mag_range_multiple magRangeMultiple = TMAG5273_MAG_RANGE_MULTIPLE_1x;
     tmag5273_temp_ch_en tempChEn = TMAG5273_TEMP_CH_DISABLED;
     
-    float magRangeValue = MAG_RANGE_40MT;
+    float magRangeValue = (float) TMAG5273_MAG_RANGE_40MT;
 
     void readRegister(uint8_t reg, uint8_t *data);
     void readRegister(uint8_t reg, int16_t *data);
