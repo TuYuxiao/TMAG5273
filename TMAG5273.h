@@ -150,6 +150,7 @@ public:
     void configTempChEnabled(bool enabled);
 
     void setDefaultAddr(uint8_t addr);
+    uint8_t getDefaultAddr(void) {return default_addr;}
 
 private:
     TwoWire *i2c_dev = NULL;
