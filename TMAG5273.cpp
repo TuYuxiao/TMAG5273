@@ -56,7 +56,7 @@ bool TMAG5273::readRegister(uint8_t reg, uint8_t *data)
 {
     i2c_dev->beginTransmission(currentDeviceAddress);
     i2c_dev->write(reg);
-    if (i2c_dev->endTransmission(1) != ESP_OK) return false;
+    if (i2c_dev->endTransmission(1) != 0) return false;
     if (i2c_dev->requestFrom((int)currentDeviceAddress, 1) == 0) return false;
     while (!i2c_dev->available()); 
     *data = i2c_dev->read();
@@ -67,7 +67,7 @@ bool TMAG5273::readRegister(uint8_t reg, int16_t *data)
 {
     i2c_dev->beginTransmission(currentDeviceAddress);
     i2c_dev->write(reg);
-    if (i2c_dev->endTransmission(1) != ESP_OK) return false;
+    if (i2c_dev->endTransmission(1) != 0) return false;
     if (i2c_dev->requestFrom((int)currentDeviceAddress, 2) == 0) return false;
     while (!i2c_dev->available()); 
     *data = (i2c_dev->read() << 8) | i2c_dev->read();
@@ -257,7 +257,7 @@ int TMAG5273::_readMagneticField(float* Bx, float* By, float* Bz, float* T) // A
         i2c_dev->beginTransmission(currentDeviceAddress);
         if (tempChEn == TMAG5273_TEMP_CH_ENABLED) i2c_dev->write(T_MSB_RESULT);
         else i2c_dev->write(X_MSB_RESULT); // it seems ok to contain trigger bit at other modes
-        if (i2c_dev->endTransmission(1) != ESP_OK) {
+        if (i2c_dev->endTransmission(1) != 0) {
             return -1;
         }
     }
