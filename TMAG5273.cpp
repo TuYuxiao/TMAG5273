@@ -1,3 +1,4 @@
+
 #include "TMAG5273.h"
 
 
@@ -51,24 +52,26 @@ void TMAG5273::configTempChEnabled(bool enabled)
     estiConversionTime = CONV_TIME_FROM_AVG_MODE(tempChEn, convAvgMode);
 }
 
-void TMAG5273::readRegister(uint8_t reg, uint8_t *data)
+bool TMAG5273::readRegister(uint8_t reg, uint8_t *data)
 {
     i2c_dev->beginTransmission(currentDeviceAddress);
     i2c_dev->write(reg);
-    i2c_dev->endTransmission(1);
-    i2c_dev->requestFrom(currentDeviceAddress, 1);
+    if (i2c_dev->endTransmission(1) != ESP_OK) return false;
+    if (i2c_dev->requestFrom((int)currentDeviceAddress, 1) == 0) return false;
     while (!i2c_dev->available()); 
     *data = i2c_dev->read();
+    return true;
 }
 
-void TMAG5273::readRegister(uint8_t reg, int16_t *data)
+bool TMAG5273::readRegister(uint8_t reg, int16_t *data)
 {
     i2c_dev->beginTransmission(currentDeviceAddress);
     i2c_dev->write(reg);
-    i2c_dev->endTransmission(1);
-    i2c_dev->requestFrom(currentDeviceAddress, 2);
+    if (i2c_dev->endTransmission(1) != ESP_OK) return false;
+    if (i2c_dev->requestFrom((int)currentDeviceAddress, 2) == 0) return false;
     while (!i2c_dev->available()); 
     *data = (i2c_dev->read() << 8) | i2c_dev->read();
+    return true;
 }
 
 bool TMAG5273::writeRegister(uint8_t reg, uint8_t data)
@@ -125,14 +128,14 @@ uint8_t TMAG5273::initSensorArray(uint32_t timeout)
     {
         while((micros() - start_time) < timeout) 
         {
-            i2c_dev->beginTransmission(TMAG5273_DEFAULT_ADDR);
+            i2c_dev->beginTransmission(default_addr);
             error = i2c_dev->endTransmission();
             if (error == 0)
             {
-                switchSensor(TMAG5273_DEFAULT_ADDR);
-                modifyI2CAddress(TMAG5273_ARRAY_START_ADDR + arrayDevices);
+                switchSensor(default_addr);
+                modifyI2CAddress(default_addr + 1 + arrayDevices);
 
-                i2c_dev->beginTransmission(TMAG5273_ARRAY_START_ADDR + arrayDevices);
+                i2c_dev->beginTransmission(default_addr + 1 + arrayDevices);
                 error = i2c_dev->endTransmission();
                 if (error == 0) 
                 {
@@ -155,7 +158,7 @@ uint8_t TMAG5273::readSensorArray(float* data_ptr)
         delayMicroseconds(estiConversionTime); // wait for conversion
     }
     uint8_t conv_status = 0x01;
-    for(uint8_t addr = TMAG5273_ARRAY_START_ADDR; addr < TMAG5273_ARRAY_START_ADDR + arrayDevices; addr++)
+    for(uint8_t addr = default_addr + 1; addr < default_addr + 1 + arrayDevices; addr++)
     {
         switchSensor(addr);
         conv_status &= _readMagneticField(data_ptr, data_ptr + 1, data_ptr + 2, &_temp);
@@ -170,7 +173,7 @@ void TMAG5273::printDeviceTable(HardwareSerial* serial)
     serial->println();
     serial->print("Sensor num: ");
     serial->println(arrayDevices);
-    for(uint8_t addr = TMAG5273_ARRAY_START_ADDR; addr < TMAG5273_ARRAY_START_ADDR + arrayDevices; addr++)
+    for(uint8_t addr = default_addr + 1; addr < default_addr + 1 + arrayDevices; addr++)
     {
         i2c_dev->beginTransmission(addr);
         error = i2c_dev->endTransmission();
@@ -233,7 +236,7 @@ float TMAG5273::readTemperature()
     return TSENSET0 + (TADCT - TADCT0) / TADCRES;
 }
 
-uint8_t TMAG5273::readMagneticField(float* Bx, float* By, float* Bz, float* T) 
+int TMAG5273::readMagneticField(float* Bx, float* By, float* Bz, float* T) 
 {
     if (operatingMode == TMAG5273_OPERATING_MODE_STANDBY)
     {
@@ -244,7 +247,7 @@ uint8_t TMAG5273::readMagneticField(float* Bx, float* By, float* Bz, float* T)
     return _readMagneticField(Bx, By, Bz, T);
 }
 
-uint8_t TMAG5273::_readMagneticField(float* Bx, float* By, float* Bz, float* T) // Assume read all XYZ data
+int TMAG5273::_readMagneticField(float* Bx, float* By, float* Bz, float* T) // Assume read all XYZ data
 {
     // Standby mode seems can only work with READ_MODE_STANDARD without int pin where exists trigger bit
     // in READ_MODE_SENSOR16, not improve the efficiency if send trigger bit through I2C
@@ -254,24 +257,47 @@ uint8_t TMAG5273::_readMagneticField(float* Bx, float* By, float* Bz, float* T) 
         i2c_dev->beginTransmission(currentDeviceAddress);
         if (tempChEn == TMAG5273_TEMP_CH_ENABLED) i2c_dev->write(T_MSB_RESULT);
         else i2c_dev->write(X_MSB_RESULT); // it seems ok to contain trigger bit at other modes
-        i2c_dev->endTransmission(1);
+        if (i2c_dev->endTransmission(1) != ESP_OK) {
+            return -1;
+        }
     }
+
+    byte data_buffer[9];
+    int read_bytes;
+    if (tempChEn == TMAG5273_TEMP_CH_ENABLED) read_bytes = 9; else read_bytes = 7;
+
     // TODO support MODE_SENSOR8 1-byte read command for 8-bit data
     // TODO support MAG_CH_EN for other setup
-    if (tempChEn == TMAG5273_TEMP_CH_ENABLED) i2c_dev->requestFrom(currentDeviceAddress, 9);
-    else i2c_dev->requestFrom(currentDeviceAddress, 7);
+    if (i2c_dev->requestFrom((int)currentDeviceAddress, read_bytes) == 0) {
+        log_e("Request data error");
+        return -1;
+    }
     
-    while (!i2c_dev->available()); 
+    unsigned long start_time = micros();
+    while (!i2c_dev->available()) {
+        if ((micros() - start_time) > 1e5) { //timeout 100 ms
+            log_e("Wait read timeout");
+            return -1;
+        }
+    } 
     
+    for (int i=9-read_bytes; i<9; i++) {
+        data_buffer[i] = i2c_dev->read();
+        if (data_buffer[i] < 0) {
+            log_e("Read data error");
+            return -1;
+        }
+    }
+
     if (tempChEn == TMAG5273_TEMP_CH_ENABLED) {
-        int16_t TADCT = (i2c_dev->read() << 8) | i2c_dev->read();
+        int16_t TADCT = (data_buffer[0] << 8) | data_buffer[1];
         *T = TSENSET0 + (TADCT - TADCT0) / TADCRES;
     }
 
-    int16_t xData = (i2c_dev->read() << 8) | i2c_dev->read(); // X Mag MSB, LSB   2's complement auto translate
-    int16_t yData = (i2c_dev->read() << 8) | i2c_dev->read(); // Y Mag MSB, LSB
-    int16_t zData = (i2c_dev->read() << 8) | i2c_dev->read(); // Z Mag MSB, LSB
-    uint8_t conv_status = i2c_dev->read();
+    int16_t xData = (data_buffer[2] << 8) | data_buffer[3]; // X Mag MSB, LSB   2's complement auto translate
+    int16_t yData = (data_buffer[4] << 8) | data_buffer[5]; // Y Mag MSB, LSB
+    int16_t zData = (data_buffer[6] << 8) | data_buffer[7]; // Z Mag MSB, LSB
+    uint8_t conv_status = data_buffer[8];
 
     *Bx = magRangeValue * ((float) xData) / 32768.f;
     *By = magRangeValue * ((float) yData) / 32768.f;
@@ -280,7 +306,13 @@ uint8_t TMAG5273::_readMagneticField(float* Bx, float* By, float* Bz, float* T) 
     return conv_status;
 }
 
-uint8_t TMAG5273::readMagneticField(float* Bx, float* By, float* Bz)
+int TMAG5273::readMagneticField(float* Bx, float* By, float* Bz)
 {
     return readMagneticField(Bx, By, Bz, &_temp);
+}
+
+void TMAG5273::setDefaultAddr(uint8_t addr)
+{
+    default_addr = addr;
+    arrayDevices = 0;
 }

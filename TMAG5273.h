@@ -50,8 +50,10 @@
 #define REG_MAG_OFFSET_CONFIG_1_DEFAULT 0x00
 #define REG_MAG_OFFSET_CONFIG_2_DEFAULT 0x00
 
-#define TMAG5273_DEFAULT_ADDR 0x35
-#define TMAG5273_ARRAY_START_ADDR 0x36
+#define TMAG5273_A_DEFAULT_ADDR 0x35
+#define TMAG5273_B_DEFAULT_ADDR 0x22
+#define TMAG5273_C_DEFAULT_ADDR 0x78
+#define TMAG5273_D_DEFAULT_ADDR 0x44
 
 #define TSENSET0 25.
 #define TADCRES 60.1
@@ -135,8 +137,8 @@ public:
     void modifyI2CAddress(uint8_t new_addr);
 
     float readTemperature(void);
-    uint8_t readMagneticField(float* Bx, float* By, float* Bz);
-    uint8_t readMagneticField(float* Bx, float* By, float* Bz, float* T);
+    int readMagneticField(float* Bx, float* By, float* Bz);
+    int readMagneticField(float* Bx, float* By, float* Bz, float* T);
 
     // config the setting before initialization
     void configOperatingMode(tmag5273_operating_mode mode);
@@ -147,9 +149,12 @@ public:
     void configConvAvgMode(tmag5273_conv_avg_mode mode);
     void configTempChEnabled(bool enabled);
 
+    void setDefaultAddr(uint8_t addr);
+
 private:
     TwoWire *i2c_dev = NULL;
-    int8_t currentDeviceAddress = TMAG5273_DEFAULT_ADDR;
+    uint8_t default_addr = TMAG5273_A_DEFAULT_ADDR;
+    uint8_t currentDeviceAddress = TMAG5273_A_DEFAULT_ADDR;
     float _temp;
     uint8_t arrayDevices = 0;
 
@@ -166,13 +171,13 @@ private:
     
     float magRangeValue = (float) TMAG5273_MAG_RANGE_40MT;
 
-    void readRegister(uint8_t reg, uint8_t *data);
-    void readRegister(uint8_t reg, int16_t *data);
+    bool readRegister(uint8_t reg, uint8_t *data);
+    bool readRegister(uint8_t reg, int16_t *data);
 
     bool writeRegister(uint8_t reg, uint8_t data);
     bool writeRegisterGeneral(uint8_t reg, uint8_t data);
 
-    uint8_t _readMagneticField(float* Bx, float* By, float* Bz, float* T);
+    int _readMagneticField(float* Bx, float* By, float* Bz, float* T);
 };
 
 #endif /* TMAG5273_H */
